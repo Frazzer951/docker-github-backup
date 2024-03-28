@@ -2,7 +2,7 @@
 
 echo "Project: github-backup"
 echo "Author:  Frazzer951"
-echo "Base:    Alpine 3.17.2"
+echo "Base:    Python 3.11-slim"
 echo "Target:  Unraid"
 echo ""
 
@@ -15,7 +15,7 @@ fi
 cp /home/docker/github-backup/config/config.json /home/docker/github-backup/config.json
 
 # Update token in config.json match $TOKEN environment variable
-sed -i '/token/c\   \"token\" : \"'${TOKEN}'\",' /home/docker/github-backup/config.json
+sed -i '/token/c\    \"token\" : \"'${TOKEN}'\",' /home/docker/github-backup/config.json
 
 # Return config.json to persistant volume
 cp /home/docker/github-backup/config.json /home/docker/github-backup/config/config.json
