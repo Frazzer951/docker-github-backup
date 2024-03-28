@@ -11,6 +11,10 @@ updates:
       prefix: "chore:"
     assignees:
       - "frazzer951"
+    groups:
+      github-actions:
+        patterns:
+          - "*"
 
   - package-ecosystem: "docker"
     directory: "/"
@@ -22,3 +26,22 @@ updates:
       prefix: "chore:"
     assignees:
       - "frazzer951"
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    allow:
+      - dependency-type: "direct"
+    commit-message:
+      prefix: "chore:"
+    assignees:
+      - "frazzer951"
+    groups:
+      github-actions:
+        patterns:
+          - "*"
