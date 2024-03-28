@@ -1,12 +1,15 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
-    name="github-backup",
-    version="1.0.0",
-    description="",
-    url="https://github.com/Frazzer951/docker-github-backup",
-    author="lnxd",
-    install_requires=["requests"],
-    scripts=["github-backup.py"],
-    zip_safe=True,
+    name='github_backup',
+    version='0.1.0',
+    packages=find_packages(),
+    install_requires=[
+        "requests==2.31.0"
+    ],
+    extras_require={
+        'dev': [
+            'ruff==0.3.4',
+        ]
+    },
 )
