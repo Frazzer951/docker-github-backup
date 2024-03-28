@@ -5,18 +5,20 @@ import os
 import re
 import subprocess
 import sys
-from typing import Iterator, Tuple, Union
+import time
+from typing import Dict, Iterator, Tuple, Union
 from urllib.parse import urlparse, urlunparse
 
 import requests
 
 
-def get_json(url: str, token: str) -> Iterator[dict]:
+def get_json(url: str, session: requests.Session) -> Iterator[Dict]:
     """
-    Fetch JSON data from a URL using pagination and authentication.
+    Fetch JSON data from a URL using pagination, authentication, and handling rate limits.
 
     Args:
         url (str): The base URL to fetch data from.
+        session (requests.Session): The requests session for making HTTP requests.
         token (str): The GitHub personal access token for authentication.
 
     Yields:
@@ -24,16 +26,38 @@ def get_json(url: str, token: str) -> Iterator[dict]:
     """
     while True:
         try:
-            response = requests.get(url, headers={"Authorization": f"token {token}"})
+            response = session.get(url, timeout=10)
             response.raise_for_status()
+
             yield response.json()
 
             if "next" not in response.links:
                 break
             url = response.links["next"]["url"]
+
+        except requests.exceptions.HTTPError as e:
+            status_code = e.response.status_code
+            if (
+                status_code == 403
+                and "X-RateLimit-Remaining" in e.response.headers
+                and e.response.headers["X-RateLimit-Remaining"] == "0"
+            ):
+                reset_time = int(e.response.headers["X-RateLimit-Reset"])
+                wait_seconds = reset_time - int(time.time()) + 10  # Adding a buffer
+                print(f"Rate limit exceeded. Waiting for {wait_seconds} seconds.", file=sys.stderr)
+                time.sleep(wait_seconds)
+                continue
+            elif 400 <= status_code < 500:
+                print(f"Client error: {e}", file=sys.stderr)
+                break
+            else:
+                print(f"Server error: {e}", file=sys.stderr)
+                time.sleep(5)  # Wait a bit before retrying
+                continue
         except requests.exceptions.RequestException as e:
             print(f"Error fetching data from {url}: {e}", file=sys.stderr)
             break
+
 
 def check_name(name: str) -> str:
     """
@@ -52,6 +76,7 @@ def check_name(name: str) -> str:
     if not re.match(pattern, name):
         raise ValueError(f"Invalid name '{name}'")
     return name
+
 
 def mkdir(path: str) -> bool:
     """
@@ -162,19 +187,21 @@ def main():
     if mkdir(path):
         print(f"Created directory {path}", file=sys.stderr)
 
-    user: dict = next(get_json("https://api.github.com/user", token))
-    for page in get_json("https://api.github.com/user/repos", token):
-        for repo in page:
-            name: str = check_name(repo["name"])
-            owner: str = check_name(repo["owner"]["login"])
-            clone_url: str = repo["clone_url"]
+    with requests.Session() as session:
+        session.headers.update({"Authorization": f"token {token}"})
+        user: dict = next(get_json("https://api.github.com/user", session))
+        for page in get_json("https://api.github.com/user/repos", session):
+            for repo in page:
+                name: str = check_name(repo["name"])
+                owner: str = check_name(repo["owner"]["login"])
+                clone_url: str = repo["clone_url"]
 
-            if owners and owner not in owners:
-                continue
+                if owners and owner not in owners:
+                    continue
 
-            owner_path: str = os.path.join(path, owner)
-            os.makedirs(owner_path, exist_ok=True)
-            mirror(name, clone_url, owner_path, user["login"], token)
+                owner_path: str = os.path.join(path, owner)
+                os.makedirs(owner_path, exist_ok=True)
+                mirror(name, clone_url, owner_path, user["login"], token)
 
 
 if __name__ == "__main__":
