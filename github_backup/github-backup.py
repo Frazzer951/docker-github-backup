@@ -12,9 +12,7 @@ import requests
 
 def get_json(url, token):
     while True:
-        response = requests.get(
-            url, headers={"Authorization": "token {0}".format(token)}
-        )
+        response = requests.get(url, headers={"Authorization": f"token {token}"})
         response.raise_for_status()
         yield response.json()
 
@@ -25,7 +23,7 @@ def get_json(url, token):
 
 def check_name(name):
     if not re.match(r"^\w[-\.\w]*$", name):
-        raise RuntimeError("invalid name '{0}'".format(name))
+        raise RuntimeError(f"invalid name '{name}'")
     return name
 
 
@@ -42,9 +40,7 @@ def mkdir(path):
 def mirror(repo_name, repo_url, to_path, username, token):
     parsed = urllib.parse.urlparse(repo_url)
     modified = list(parsed)
-    modified[1] = "{username}:{token}@{netloc}".format(
-        username=username, token=token, netloc=parsed.netloc
-    )
+    modified[1] = f"{username}:{token}@{parsed.netloc}"
     repo_url = urllib.parse.urlunparse(modified)
 
     repo_path = os.path.join(to_path, repo_name)
@@ -82,7 +78,7 @@ def main():
     token = config["token"]
     path = os.path.expanduser(config["directory"])
     if mkdir(path):
-        print("Created directory {0}".format(path), file=sys.stderr)
+        print(f"Created directory {path}", file=sys.stderr)
 
     user = next(get_json("https://api.github.com/user", token))
     for page in get_json("https://api.github.com/user/repos", token):
