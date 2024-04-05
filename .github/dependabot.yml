@@ -15,6 +15,10 @@ updates:
       github-actions:
         patterns:
           - "*"
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - "version-update:semver-patch"
 
   - package-ecosystem: "docker"
     directory: "/"
@@ -27,9 +31,13 @@ updates:
     assignees:
       - "frazzer951"
     groups:
-      github-actions:
+      docker:
         patterns:
           - "*"
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - "version-update:semver-patch"
 
   - package-ecosystem: "pip"
     directory: "/"
@@ -42,6 +50,10 @@ updates:
     assignees:
       - "frazzer951"
     groups:
-      github-actions:
+      pip:
         patterns:
           - "*"
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - "version-update:semver-patch"
