@@ -7,7 +7,7 @@ setup(
     install_requires=["requests==2.32.2"],
     extras_require={
         "dev": [
-            "ruff==0.4.4",
+            "ruff==0.5.0",
         ]
     },
 )
