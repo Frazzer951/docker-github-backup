@@ -6,13 +6,13 @@ import re
 import subprocess
 import sys
 import time
-from typing import Dict, Iterator, Tuple, Union
+from collections.abc import Iterator
 from urllib.parse import urlparse, urlunparse
 
 import requests
 
 
-def get_json(url: str, session: requests.Session) -> Iterator[Dict]:
+def get_json(url: str, session: requests.Session) -> Iterator[dict]:
     """
     Fetch JSON data from a URL using pagination, authentication, and handling rate limits.
 
@@ -148,7 +148,7 @@ def fetch_repo(repo_path: str, repo_url: str) -> None:
     )
 
 
-def mirror(repo_name: str, repo_url: str, to_path: str, username: str, token: str) -> Tuple[str, str]:
+def mirror(repo_name: str, repo_url: str, to_path: str, username: str, token: str) -> tuple[str, str]:
     """
     Mirror a GitHub repository to a local directory.
 
@@ -181,7 +181,7 @@ def main():
     with open(args.config, "rb") as f:
         config = json.loads(f.read())
 
-    owners: Union[list[str], None] = config.get("owners")
+    owners: list[str] | None = config.get("owners")
     token: str = config["token"]
     path: str = os.path.expanduser(config["directory"])
     if mkdir(path):
