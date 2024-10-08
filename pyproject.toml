@@ -1,0 +1,34 @@
+[project]
+name            = "github_backup"
+version         = "0.1.0"
+requires-python = ">=3.11"
+dependencies    = [
+    "requests~=2.32.3"
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff"
+]
+
+[build-system]
+requires      = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["github_backup"]
+
+[tool.ruff]
+exclude        = [".venv", ".vscode", "venv"]
+line-length    = 120
+indent-width   = 4
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "UP", "B"]
+
+[tool.ruff.format]
+quote-style               = "double"
+indent-style              = "space"
+skip-magic-trailing-comma = false
+line-ending               = "auto"
