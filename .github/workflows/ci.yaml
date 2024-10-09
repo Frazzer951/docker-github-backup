@@ -1,21 +1,34 @@
 name: CI
-on: [push, pull_request]
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
 
 jobs:
-  check:
-    name: Check
+  lint:
+    name: Lint and Format
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: chartboost/ruff-action@v1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff
+
+      - name: Run Ruff linter
+        uses: chartboost/ruff-action@v1
         with:
           args: "check"
 
-  format:
-    name: Format
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: chartboost/ruff-action@v1
+      - name: Check formatting
+        uses: chartboost/ruff-action@v1
         with:
           args: "format --check"
