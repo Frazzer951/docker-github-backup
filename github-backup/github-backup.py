@@ -10,20 +10,11 @@ from collections.abc import Iterator
 from urllib.parse import urlparse, urlunparse
 
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 
 def get_json(url: str, session: requests.Session) -> Iterator[dict]:
-    """
-    Fetch JSON data from a URL using pagination, authentication, and handling rate limits.
-
-    Args:
-        url (str): The base URL to fetch data from.
-        session (requests.Session): The requests session for making HTTP requests.
-        token (str): The GitHub personal access token for authentication.
-
-    Yields:
-        dict: The JSON data from each page of the response.
-    """
     while True:
         try:
             response = session.get(url, timeout=10)
@@ -60,18 +51,6 @@ def get_json(url: str, session: requests.Session) -> Iterator[dict]:
 
 
 def check_name(name: str) -> str:
-    """
-    Check if a name is valid according to a regular expression pattern.
-
-    Args:
-        name (str): The name to be checked.
-
-    Raises:
-        ValueError: If the name is invalid.
-
-    Returns:
-        str: The validated name.
-    """
     pattern = r"^\w[-\.\w]*$"
     if not re.match(pattern, name):
         raise ValueError(f"Invalid name '{name}'")
@@ -79,15 +58,6 @@ def check_name(name: str) -> str:
 
 
 def mkdir(path: str) -> bool:
-    """
-    Create a directory if it doesn't exist.
-
-    Args:
-        path (str): The path to the directory.
-
-    Returns:
-        bool: True if a new directory was created, False otherwise.
-    """
     try:
         os.makedirs(path, mode=0o770)
         return True
@@ -98,17 +68,6 @@ def mkdir(path: str) -> bool:
 
 
 def prepare_repo_url(repo_url: str, username: str, token: str) -> str:
-    """
-    Prepare the repository URL for cloning with authentication.
-
-    Args:
-        repo_url (str): The original repository URL.
-        username (str): The GitHub username.
-        token (str): The GitHub personal access token.
-
-    Returns:
-        str: The prepared repository URL with authentication credentials.
-    """
     parsed = urlparse(repo_url)
     modified = list(parsed)
     modified[1] = f"{username}:{token}@{parsed.netloc}"
@@ -116,23 +75,10 @@ def prepare_repo_url(repo_url: str, username: str, token: str) -> str:
 
 
 def init_bare_repo(repo_path: str) -> None:
-    """
-    Initialize a bare Git repository at the given path.
-
-    Args:
-        repo_path (str): The path to the repository.
-    """
     subprocess.run(["git", "init", "--bare", "--quiet"], cwd=repo_path, check=True)
 
 
 def fetch_repo(repo_path: str, repo_url: str) -> None:
-    """
-    Fetch the remote repository into the bare repository.
-
-    Args:
-        repo_path (str): The path to the bare repository.
-        repo_url (str): The URL of the remote repository.
-    """
     subprocess.run(
         [
             "git",
@@ -149,19 +95,6 @@ def fetch_repo(repo_path: str, repo_url: str) -> None:
 
 
 def mirror(repo_name: str, repo_url: str, to_path: str, username: str, token: str) -> tuple[str, str]:
-    """
-    Mirror a GitHub repository to a local directory.
-
-    Args:
-        repo_name (str): The name of the repository.
-        repo_url (str): The URL of the remote repository.
-        to_path (str): The path to the directory where the repository will be mirrored.
-        username (str): The GitHub username.
-        token (str): The GitHub personal access token.
-
-    Returns:
-        Tuple[str, str]: The owner and name of the mirrored repository.
-    """
     repo_path = os.path.join(to_path, repo_name)
     os.makedirs(repo_path, exist_ok=True)
 
@@ -173,13 +106,22 @@ def mirror(repo_name: str, repo_url: str, to_path: str, username: str, token: st
     return repo_name, repo_url.split("/")[-2]
 
 
+def create_session(retries: int = 3, backoff_factor: float = 0.3) -> requests.Session:
+    session = requests.Session()
+    retry = Retry(total=retries, backoff_factor=backoff_factor, status_forcelist=[500, 502, 503, 504])
+    adapter = HTTPAdapter(max_retries=retry)
+    session.mount("http://", adapter)
+    session.mount("https://", adapter)
+    return session
+
+
 def main():
     parser = argparse.ArgumentParser(description="Backup GitHub repositories")
     parser.add_argument("config", metavar="CONFIG", help="a configuration file")
     args = parser.parse_args()
 
-    with open(args.config, "rb") as f:
-        config = json.loads(f.read())
+    with open(args.config) as f:
+        config = json.load(f)
 
     owners: list[str] | None = config.get("owners")
     token: str = config["token"]
@@ -187,7 +129,7 @@ def main():
     if mkdir(path):
         print(f"Created directory {path}", file=sys.stderr)
 
-    with requests.Session() as session:
+    with create_session() as session:
         session.headers.update({"Authorization": f"token {token}"})
         user: dict = next(get_json("https://api.github.com/user", session))
         for page in get_json("https://api.github.com/user/repos", session):
