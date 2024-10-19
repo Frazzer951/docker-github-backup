@@ -1,5 +1,5 @@
 # Base image
-FROM python:3.12-slim
+FROM python:3.11-slim
 
 # Set work directory
 WORKDIR /home/docker
@@ -11,7 +11,7 @@ RUN apt-get update && \
 
 # Copy the necessary files
 COPY github-backup/ ./github-backup/
-COPY setup.py .
+COPY pyproject.toml .
 COPY config.json.example ./github-backup/
 COPY backup.sh .
 
