@@ -1,5 +1,5 @@
 # Base image
-FROM python:3.11-slim
+FROM python:3.12-slim
 
 # Set work directory
 WORKDIR /home/docker
