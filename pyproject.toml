@@ -1,17 +1,19 @@
-[build-system]
-requires      = ["setuptools>=64", "setuptools-scm>=8"]
-build-backend = "setuptools.build_meta"
-
-[tool.setuptools_scm]
-
 [project]
 name            = "github_backup"
-dynamic         = ["version"]
+version         = "1.0.0"
 requires-python = ">=3.13,<3.14"
-dependencies    = ["requests~=2.32.3"]
+dependencies    = [
+    "requests~=2.32.3"
+]
 
 [project.optional-dependencies]
-dev = ["ruff"]
+dev = [
+    "ruff"
+]
+
+[build-system]
+requires      = ["setuptools"]
+build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 include = ["github_backup"]
