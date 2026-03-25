@@ -3,7 +3,7 @@ name            = "github_backup"
 version         = "1.0.0"
 requires-python = ">=3.13,<3.14"
 dependencies    = [
-    "requests~=2.32.3"
+    "requests~=2.33.0"
 ]
 
 [project.optional-dependencies]
