@@ -1,4 +1,9 @@
 {
     "token": "0123456789abcdef0123456789abcdef",
-    "directory": "/home/docker/backups"
+    "directory": "/home/docker/backups",
+    "concurrency": 4,
+    "schedule_seconds": 86400,
+    "failure_delay_seconds": 300,
+    "extra_orgs": [],
+    "owners": []
 }
