@@ -80,10 +80,13 @@ def load_config(config_path: str | Path) -> AppConfig:
         raise ConfigError("Backup directory is required via config or BACKUP_DIRECTORY")
 
     owners = _read_name_list(os.environ.get("OWNERS") or payload.get("owners"), field_name="owners")
-    extra_orgs = _read_name_list(
-        os.environ.get("EXTRA_ORGS") or payload.get("extra_orgs"),
-        field_name="extra_orgs",
-    ) or frozenset()
+    extra_orgs = (
+        _read_name_list(
+            os.environ.get("EXTRA_ORGS") or payload.get("extra_orgs"),
+            field_name="extra_orgs",
+        )
+        or frozenset()
+    )
 
     concurrency = _read_positive_int(
         os.environ.get("CONCURRENCY", payload.get("concurrency", DEFAULT_CONCURRENCY)),
