@@ -41,6 +41,17 @@ def _normalize_git_output(stdout: str, stderr: str) -> str:
     return "\n".join(lines)
 
 
+def _has_remote(repo_path: Path, remote_name: str, *, env: dict[str, str]) -> bool:
+    result = subprocess.run(
+        ["git", "remote", "get-url", remote_name],
+        cwd=repo_path,
+        env=env,
+        capture_output=True,
+        text=True,
+    )
+    return result.returncode == 0
+
+
 @contextmanager
 def git_credentials_env(token: str) -> Iterator[dict[str, str]]:
     with tempfile.NamedTemporaryFile("w", suffix=".sh", delete=False, encoding="utf-8") as handle:
@@ -89,7 +100,10 @@ def mirror_repo(repo_name: str, owner: str, clone_url: str, destination: Path, *
         changed = True
         details = ""
     else:
-        _run_git(["remote", "set-url", "origin", clone_url], cwd=repo_path, env=env)
+        if _has_remote(repo_path, "origin", env=env):
+            _run_git(["remote", "set-url", "origin", clone_url], cwd=repo_path, env=env)
+        else:
+            _run_git(["remote", "add", "origin", clone_url], cwd=repo_path, env=env)
         details = _run_git(
             ["fetch", "--force", "--prune", "--tags", "origin", FETCH_REFSPEC],
             cwd=repo_path,
