@@ -2,7 +2,7 @@
 FROM python:3.13-slim
 
 # Set work directory
-WORKDIR /home/docker
+WORKDIR /home/docker/github-backup
 
 # Install system dependencies including git
 RUN apt-get update && \
@@ -10,16 +10,14 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # Copy the necessary files
-COPY github-backup/ ./github-backup/
-COPY pyproject.toml .
-COPY config.json.example ./github-backup/
-COPY backup.sh .
+COPY github_backup/ ./github_backup/
+COPY pyproject.toml README.md backup.sh config.json.example ./
 
 # Install project dependencies
 RUN pip install --no-cache-dir -e .
 
 # Set permissions
-RUN chmod -R 777 /home/docker && \
+RUN chmod -R 775 /home/docker && \
     chown -R 99:100 /home/docker
 
 # Use the non-root user to run the container

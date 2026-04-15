@@ -1,28 +1,21 @@
 #!/bin/sh
 
+set -eu
+
 echo "Project: github-backup"
 echo "Author:  Frazzer951"
 echo "Base:    Python 3.13-slim"
 echo "Target:  Unraid"
 echo ""
 
-# If config doesn't exist yet, create it
-if [ ! -f /home/docker/github-backup/config/config.json ]; then
-    cp /home/docker/github-backup/config.json.example /home/docker/github-backup/config/config.json
+APP_ROOT=/home/docker/github-backup
+CONFIG_DIR=${CONFIG_DIR:-$APP_ROOT/config}
+CONFIG_PATH=${CONFIG_PATH:-$CONFIG_DIR/config.json}
+
+mkdir -p "$CONFIG_DIR"
+
+if [ ! -f "$CONFIG_PATH" ]; then
+    cp "$APP_ROOT/config.json.example" "$CONFIG_PATH"
 fi
 
-# Update config.json
-cp /home/docker/github-backup/config/config.json /home/docker/github-backup/config.json
-
-# Update token in config.json match $TOKEN environment variable
-sed -i '/token/c\    \"token\" : \"'${TOKEN}'\",' /home/docker/github-backup/config.json
-
-# Return config.json to persistant volume
-cp /home/docker/github-backup/config.json /home/docker/github-backup/config/config.json
-
-# Start backup
-while true; do
-    python3 ./github-backup/github-backup.py /home/docker/github-backup/config/config.json
-    chown -R 99:100 /home/docker/backups
-    sleep $SCHEDULE
-done
+exec python3 -m github_backup "$CONFIG_PATH" --loop
